@@ -13,15 +13,17 @@ public class Node {
 	Node nChild=null;
 	Node parent=null;
 	Boolean reply=null;
-	boolean levelPassed=true;
+	boolean levelPassed=false;
 
 
 	public Node(String[][] readData) {
 		en=new EntrySet(readData);
+		calculateRawReply();
 	}
 
 	public Node(EntrySet e) {
 		en=new EntrySet(e);
+		calculateRawReply();
 	}
 
 	private void selectAttribute() {
@@ -53,56 +55,47 @@ public class Node {
 
 		if (best.gain > 0) {
 			winner = best;
-		} else {
+		}
 			//System.out.println("gggggggggggggggggggggggggggggg");
-			int[] rep = en.getPNcount();
-			if (rep[0] > rep[1]) {
-				reply = true;
-			} else {
-				reply = false;
-			}
+
 		//	System.out.println("aaaa " + reply);
 		//	System.out.println(parent.winner.attribute);
 		//	System.out.println(parent.getAncestors());
-		}
+
 
 	}
 
-
+	private void calculateRawReply(){
+		int[] rep = en.getPNcount();
+		if (rep[0] > rep[1]) {
+			reply = true;
+		} else {
+			reply = false;
+		}
+	}
 
 
 	public boolean evaluate(HashMap<String,Boolean> line){
-
-
-		if(reply!=null){
-			return reply;
-		}
-		else{
-
-
-	/*		try {
-				System.out.println("I am :"+ winner.attribute+ " Rep "+reply);
-				System.out.println("P child :"+ pChild.winner.attribute);
-				System.out.println("N child :"+ nChild.winner.attribute);
-			//	Iterator<String> itr = line.keySet().iterator();
-			//	System.out.println();
-			//	while (itr.hasNext()) {
-			//		System.out.print(itr.next() + " ");
-			//	}
-			//	System.out.println();
-			}
-			catch(Exception e){
-				System.out.println(this.getAncestors());
-			}*/
-
-
-
+		if(winner!=null){
 			if(line.get(winner.attribute)){
-				return(pChild.evaluate(line));
+				if(pChild!=null) {
+					return (pChild.evaluate(line));
+				}
+				else{ //Act as a leaf
+					return reply;
+				}
 			}
-			else{
-				return(nChild.evaluate(line));
+			else{ //Act as a leaf
+				if(nChild!=null) {
+					return (nChild.evaluate(line));
+				}
+				else{
+					return reply;
+				}
 			}
+		}
+		else{ //IS an actual leaf
+			return reply;
 		}
 	}
 
@@ -137,12 +130,12 @@ public class Node {
 
 		//	System.out.println(levelPassed);
 
-			//if(winner.remainder != 0) {
+			if(levelPassed) {
 				pChild.MakeChildren();
 				nChild.MakeChildren();
 				pChild.levelPassed=true;
 				nChild.levelPassed=true;
-			//}
+			}
 		}
 	}
 
