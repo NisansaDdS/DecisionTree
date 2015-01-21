@@ -1,9 +1,6 @@
 package id3;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 
 public class Node {
 
@@ -51,7 +48,22 @@ public class Node {
 		Collections.sort(gainEls);
 
 
+
 		GainElement best = gainEls.get(0);
+
+		//Add randomization
+		ArrayList<GainElement> bestList=new ArrayList<GainElement>();
+		double bestGain=gainEls.get(0).gain;
+		for (int i = 0; i < gainEls.size(); i++) {
+			if(gainEls.get(i).gain>=bestGain){
+				bestList.add(gainEls.get(i));
+			}
+		}
+		best=bestList.get(new Random().nextInt(bestList.size()));
+
+
+
+
 
 		if (best.gain > 0) {
 			winner = best;
