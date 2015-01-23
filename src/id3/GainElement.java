@@ -30,6 +30,14 @@ public class GainElement implements Comparable {
         else if(this.gain <g.gain){
             return 1;
         }
+        else{
+            if(this.attribute.compareToIgnoreCase(g.attribute)>0){
+                return 1;
+            }
+            else if (this.attribute.compareToIgnoreCase(g.attribute)<0){
+                return -1;
+            }
+        }
         return 0;
     }
 }

@@ -8,9 +8,10 @@ public class Node {
 	GainElement winner=null;
 	Node pChild=null;
 	Node nChild=null;
-	Node parent=null;
+	private Node parent=null;
 	Boolean reply=null;
 	boolean levelPassed=false;
+	double chiLimit=0;
 
 
 	public Node(String[][] readData) {
@@ -41,6 +42,8 @@ public class Node {
 				double nEntrophy = nHalf.calculateEntropy();
 				double remainder = (pWeight * pEntrophy) + (nWeight * nEntrophy);
 				double gain = entropy - remainder;
+				//DecimalFormat df = new DecimalFormat("#.######");
+				//System.out.println(attr+" "+df.format(gain));
 				GainElement ge = new GainElement(attr, gain, pHalf, nHalf, remainder);
 				gainEls.add(ge);
 			}
@@ -51,7 +54,7 @@ public class Node {
 
 		GainElement best = gainEls.get(0);
 
-		//Add randomization
+/*		//Add randomization
 		ArrayList<GainElement> bestList=new ArrayList<GainElement>();
 		double bestGain=gainEls.get(0).gain;
 		for (int i = 0; i < gainEls.size(); i++) {
@@ -59,7 +62,9 @@ public class Node {
 				bestList.add(gainEls.get(i));
 			}
 		}
-		best=bestList.get(new Random().nextInt(bestList.size()));
+
+
+		best=bestList.get(new Random().nextInt(bestList.size())); */
 
 
 
@@ -67,15 +72,51 @@ public class Node {
 
 		if (best.gain > 0) {
 			winner = best;
+
+			//Calculate Chi-Squared
+			int[] thisPN = en.getPNcount();
+
+			int[] pChildPN=winner.phalf.getPNcount();
+			double[] pChildExpectedPNprob=calculateExpectedProbs(thisPN,pChildPN);
+			double pStatistic= calculateStatisticForSubset(pChildPN,pChildExpectedPNprob);
+
+			int[] nChildPN=winner.nhalf.getPNcount();
+			double[] nChildExpectedPNprob=calculateExpectedProbs(thisPN,nChildPN);
+			double nStatistic= calculateStatisticForSubset(nChildPN,nChildExpectedPNprob);
+
+			double totalChiSqStatistic=pStatistic+nStatistic;
+
+			System.out.println("Chi of "+winner.attribute+" : "+totalChiSqStatistic);
+			System.out.println("Against "+this.chiLimit);
+			if(totalChiSqStatistic<this.chiLimit){
+				winner=null; //Pruned
+				//System.out.println("Pruned!");
+			}
 		}
-			//System.out.println("gggggggggggggggggggggggggggggg");
-
-		//	System.out.println("aaaa " + reply);
-		//	System.out.println(parent.winner.attribute);
-		//	System.out.println(parent.getAncestors());
-
 
 	}
+
+
+	private double[] calculateExpectedProbs(int[] original,int[] subset){
+		return new double[]{calculateExpected(original[0],original,subset),calculateExpected(original[1],original,subset)};
+	}
+
+	private double calculateExpected(int lead,int[] original,int[] subset){
+		return(lead* (((double)(subset[0]+subset[1]))/((double)(original[0]+original[1]))));
+	}
+
+
+
+
+	private double calculateStatisticForSubset(int[] subset,double[] subsetExpected){
+		return calculateStatHalf(subset[0],subsetExpected[0])+calculateStatHalf(subset[1],subsetExpected[1]);
+	}
+
+	private double calculateStatHalf(double actual,double expected){
+		return ((Math.pow((actual-expected),2))/expected);
+	}
+
+
 
 	private void calculateRawReply(){
 		int[] rep = en.getPNcount();
@@ -116,8 +157,8 @@ public class Node {
 
 	public String getAncestors(){
 		String line="";
-		if(parent!=null){
-			line=parent.winner.attribute+" "+parent.getAncestors();
+		if(getParent() !=null){
+			line= getParent().winner.attribute+" "+ getParent().getAncestors();
 		}
 		else{
 			line="*";
@@ -126,29 +167,32 @@ public class Node {
 	}
 
 
-	public void MakeChildren(){
+	public boolean MakeChildren(){
 		if(winner==null){
 			selectAttribute();
 		}
 		if(winner!=null) {
 			if(pChild==null) {
 				pChild = new Node(winner.phalf);
-				pChild.parent=this;
+				pChild.setParent(this);
 			}
 			if(nChild==null) {
 				nChild = new Node(winner.nhalf);
-				nChild.parent=this;
+				nChild.setParent(this);
 			}
 
 		//	System.out.println(levelPassed);
 
 			if(levelPassed) {
-				pChild.MakeChildren();
-				nChild.MakeChildren();
+				boolean pBranch= pChild.MakeChildren();
+				boolean nBranch= nChild.MakeChildren();
 				pChild.levelPassed=true;
 				nChild.levelPassed=true;
+				return (pBranch||nBranch);
 			}
 		}
+
+		return (winner!=null);
 	}
 
 	public String getString(String indent){
@@ -170,6 +214,12 @@ public class Node {
 	}
 
 
+	public Node getParent() {
+		return parent;
+	}
 
-
+	public void setParent(Node parent) {
+		this.parent = parent;
+		this.chiLimit=parent.chiLimit;
+	}
 }
