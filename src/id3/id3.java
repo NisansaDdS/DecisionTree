@@ -8,7 +8,7 @@ import java.util.Iterator;
 
 /**
  * 
- * @author Nisansa
+ * @author Nisansa de Silva
  *
  */
 public class id3 {
@@ -18,40 +18,39 @@ public class id3 {
 	}
 
 	public id3() {
-		//Train
+
 		String[][] training_data = readFile("training_set");
 		EntrySet training_set = new EntrySet(training_data);
 		String[][] test_data = readFile("test_set");
 		EntrySet test_set = new EntrySet(test_data);
 
-
+		//Train
 		Node n = new Node(training_set);
 		n.chiLimit=6.635;
-
-
-		double accuracy = 100;
-		int depth=0;
 		boolean loop=false;
 		do {
-			depth++;
 			loop=n.MakeChildren();
 			n.levelPassed = true;
-
-			System.out.println(n.getString(""));
-
-			Iterator<HashMap<String, Boolean>> itr = test_set.getIterator();
-			int count = 0;
-			while (itr.hasNext()) {
-				HashMap<String, Boolean> observation = itr.next();
-				if (n.evaluate(observation) == observation.get("Class")) {
-					count++;
-				}
-			}
-			accuracy = ( (((double) count * 100) / (double) test_set.Size()));
-			System.out.println("Accuracy : " + accuracy + "%\n");
 		} while (loop);
-		System.out.println(depth);
 
+
+		//Test
+		Iterator<HashMap<String, Boolean>> itr = test_set.getIterator();
+		int count = 0;
+		double accuracy = 100;
+		while (itr.hasNext()) {
+			HashMap<String, Boolean> observation = itr.next();
+			if (n.evaluate(observation) == observation.get("Class")) {
+				count++;
+			}
+		}
+		accuracy = ( (((double) count * 100) / (double) test_set.Size()));
+
+		//Print on screen
+		System.out.println(n.getString(""));
+		System.out.println("\nAccuracy : " + accuracy + "%\n");
+
+		//Print file
 		writeFile("model",n.getString(""));
 	}
 
@@ -63,7 +62,6 @@ public class id3 {
 					new FileOutputStream(fileName+".model"), "utf-8"));
 			writer.write(content);
 		} catch (IOException ex) {
-			// report
 		} finally {
 			try {writer.close();} catch (Exception ex) {}
 		}
@@ -102,7 +100,6 @@ public class id3 {
 		boolean levelPassed=false;
 		double chiLimit=0;
 
-
 		public Node(String[][] readData) {
 			en=new EntrySet(readData);
 			calculateRawReply();
@@ -131,8 +128,6 @@ public class id3 {
 					double nEntrophy = nHalf.calculateEntropy();
 					double remainder = (pWeight * pEntrophy) + (nWeight * nEntrophy);
 					double gain = entropy - remainder;
-					//DecimalFormat df = new DecimalFormat("#.######");
-					//System.out.println(attr+" "+df.format(gain));
 					GainElement ge = new GainElement(attr, gain, pHalf, nHalf, remainder);
 					gainEls.add(ge);
 				}
@@ -151,13 +146,7 @@ public class id3 {
 				bestList.add(gainEls.get(i));
 			}
 		}
-
-
 		best=bestList.get(new Random().nextInt(bestList.size())); */
-
-
-
-
 
 			if (best.gain > 0) {
 				winner = best;
@@ -175,11 +164,8 @@ public class id3 {
 
 				double totalChiSqStatistic=pStatistic+nStatistic;
 
-				System.out.println("Chi of "+winner.attribute+" : "+totalChiSqStatistic);
-				System.out.println("Against "+this.chiLimit);
 				if(totalChiSqStatistic<this.chiLimit){
 					winner=null; //Pruned
-					//System.out.println("Pruned!");
 				}
 			}
 
@@ -193,8 +179,6 @@ public class id3 {
 		private double calculateExpected(int lead,int[] original,int[] subset){
 			return(lead* (((double)(subset[0]+subset[1]))/((double)(original[0]+original[1]))));
 		}
-
-
 
 
 		private double calculateStatisticForSubset(int[] subset,double[] subsetExpected){
@@ -241,9 +225,6 @@ public class id3 {
 			}
 		}
 
-
-
-
 		public String getAncestors(){
 			String line="";
 			if(getParent() !=null){
@@ -254,7 +235,6 @@ public class id3 {
 			}
 			return line;
 		}
-
 
 		public boolean MakeChildren(){
 			if(winner==null){
@@ -269,8 +249,6 @@ public class id3 {
 					nChild = new Node(winner.nhalf);
 					nChild.setParent(this);
 				}
-
-				//	System.out.println(levelPassed);
 
 				if(levelPassed) {
 					boolean pBranch= pChild.MakeChildren();
@@ -333,8 +311,6 @@ public class id3 {
 			this.remainder= remainder;
 		}
 
-
-
 		@Override
 		public int compareTo(Object o) {
 			GainElement g=(GainElement)o;
@@ -390,8 +366,6 @@ public class id3 {
 			return entries.iterator();
 		}
 
-
-
 		public EntrySet(String[][] readData) {
 			for (int i = 1; i <readData.length ; i++) {
 				HashMap<String, Boolean> entry=new HashMap<String, Boolean>();
@@ -407,12 +381,6 @@ public class id3 {
 				entries.add(entry);
 			}
 		}
-
-
-
-
-
-
 
 		public void RetainAttributeValueAndDropName(String attr,Boolean val){
 			RetainAttributeValueOf(attr,val);
@@ -432,7 +400,7 @@ public class id3 {
 
 		public void DropAttribute(String attr){
 			for (int i = 0; i < entries.size(); i++) {
-				entries.get(i).remove(attr);      //See if this works as a reference!
+				entries.get(i).remove(attr);
 			}
 		}
 
@@ -442,14 +410,11 @@ public class id3 {
 
 		public double calculateEntropy(){
 			int[] pn=getPNcount();
-			//System.out.println(pn[0]);
-			//System.out.println(pn[1]);
 			return(calculateEntropy(pn[0], pn[1]));
 		}
 
 		public int[] getPNcount(){
 			int[] counts=new int[2];
-			// System.out.println("L"+entries.get(0).keySet().contains("Class"));
 			for (int i = 0; i <entries.size() ; i++) {
 				if(entries.get(i).get("Class")){
 					counts[0]++;
@@ -484,7 +449,6 @@ public class id3 {
 		{
 			return Math.log(a) / Math.log(b);
 		}
-
 
 	}
 
