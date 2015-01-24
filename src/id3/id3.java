@@ -1,8 +1,6 @@
 package id3;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -14,8 +12,6 @@ import java.util.Iterator;
  */
 public class id3 {
 
-	
-	
 	public static void main(String[] args) {
 		id3 dt = new id3();
 
@@ -53,8 +49,22 @@ public class id3 {
 		} while (loop);
 		System.out.println(depth);
 
+		dt.writeFile("model",n.getString(""));
 
+	}
 
+	public void writeFile(String fileName,String content){
+		Writer writer = null;
+
+		try {
+			writer = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(fileName+".model"), "utf-8"));
+			writer.write(content);
+		} catch (IOException ex) {
+			// report
+		} finally {
+			try {writer.close();} catch (Exception ex) {}
+		}
 	}
 
 

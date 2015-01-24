@@ -198,8 +198,12 @@ public class Node {
 	public String getString(String indent){
 		String line = "";
 		if (winner != null) {
-			line += "\n" + indent + winner.attribute + " = 0: " + nChild.getString(indent + "| ");
-			line += "\n" + indent + winner.attribute + " = 1: " + pChild.getString(indent + "| ");
+			if (!indent.equalsIgnoreCase("")) {
+				line += "\n";
+			}
+			line += indent + winner.attribute + " = 0 : " + nChild.getString(indent + "| ");
+			line += "\n";
+			line += indent + winner.attribute + " = 1 : " + pChild.getString(indent + "| ");
 		}
 		else{
 			if (reply != null) {
