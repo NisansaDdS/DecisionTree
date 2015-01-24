@@ -1,5 +1,3 @@
-package id3;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,17 +9,31 @@ import java.util.Iterator;
  * @author Nisansa de Silva
  *
  */
+@SuppressWarnings("unchecked")
 public class id3 {
 
 	public static void main(String[] args) {
-		id3 dt = new id3();
+		if (args.length != 3) {
+			System.err.println("Error in arguments");
+		} else {
+			if (!args[0].contains(".csv")) {
+				args[0] = args[0] + ".csv";
+			}
+			if (!args[1].contains(".csv")) {
+				args[1] = args[1] + ".csv";
+			}
+			if (!args[2].contains(".model")) {
+				args[2] = args[2] + ".model";
+			}
+			id3 dt = new id3(args[0], args[1], args[2]); //"training_set", "test_set", "model"
+		}
 	}
 
-	public id3() {
+	public id3(String trainingSet,String testSet,String modelFile) {
 
-		String[][] training_data = readFile("training_set");
+		String[][] training_data = readFile(trainingSet);
 		EntrySet training_set = new EntrySet(training_data);
-		String[][] test_data = readFile("test_set");
+		String[][] test_data = readFile(testSet);
 		EntrySet test_set = new EntrySet(test_data);
 
 		//Train
@@ -51,7 +63,7 @@ public class id3 {
 		System.out.println("\nAccuracy : " + accuracy + "%\n");
 
 		//Print file
-		writeFile("model",n.getString(""));
+		writeFile(modelFile,n.getString(""));
 	}
 
 	public void writeFile(String fileName,String content){
@@ -59,7 +71,7 @@ public class id3 {
 
 		try {
 			writer = new BufferedWriter(new OutputStreamWriter(
-					new FileOutputStream(fileName+".model"), "utf-8"));
+					new FileOutputStream(fileName), "utf-8"));
 			writer.write(content);
 		} catch (IOException ex) {
 		} finally {
@@ -70,7 +82,7 @@ public class id3 {
 	public String[][] readFile(String filename) {
 		String[][] data=new String[0][0];
 		try {
-			BufferedReader br = new BufferedReader(new FileReader(filename + ".csv"));
+			BufferedReader br = new BufferedReader(new FileReader(filename));
 			String line = br.readLine();
 			ArrayList<String[]> dataLines=new ArrayList<String[]>();
 			while (line != null) {
