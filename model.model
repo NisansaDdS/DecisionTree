@@ -1,30 +1,56 @@
-XI = 0 : 
-| XU = 0 : 
-| | XQ = 0 : 
-| | | XF = 0 : 
-| | | | XO = 0 : 0
-| | | | XO = 1 : 1
-| | | XF = 1 : 0
-| | XQ = 1 : 
-| | | XB = 0 : 
-| | | | XT = 0 : 1
-| | | | XT = 1 : 1
-| | | XB = 1 : 
-| | | | XO = 0 : 0
-| | | | XO = 1 : 0
-| XU = 1 : 
-| | XG = 0 : 
-| | | XS = 0 : 1
-| | | XS = 1 : 
-| | | | XO = 0 : 0
-| | | | XO = 1 : 0
-| | XG = 1 : 0
-XI = 1 : 
-| XK = 0 : 1
-| XK = 1 : 
-| | XD = 0 : 
-| | | XT = 0 : 1
-| | | XT = 1 : 
-| | | | XB = 0 : 1
-| | | | XB = 1 : 0
-| | XD = 1 : 0
+-206.0
+word_telnet -38.0
+word_pm 2.0
+word_edu -42.0
+word_technology 22.0
+word_data -18.0
+word_receive -2.0
+word_lab -14.0
+word_3d 42.0
+char_exclamation 26.0
+char_semicolon -14.0
+word_415 2.0
+char_pound -14.0
+word_650 38.0
+word_make -14.0
+word_direct -2.0
+word_hp -54.0
+word_over -10.0
+word_internet 22.0
+word_you -10.0
+char_lparen 10.0
+word_order 6.0
+word_000 22.0
+word_all -6.0
+word_font 34.0
+word_email -10.0
+char_dollar 30.0
+word_cs -86.0
+word_857 6.0
+Base -206.0
+word_our 22.0
+word_table 6.0
+word_will -18.0
+word_labs -14.0
+word_meeting -42.0
+word_parts 34.0
+word_business 14.0
+word_re -14.0
+word_hpl -14.0
+word_address -6.0
+word_people -18.0
+word_project -26.0
+word_original -14.0
+word_1999 -14.0
+word_george -98.0
+word_addresses 14.0
+word_money 26.0
+word_report 14.0
+word_your 2.0
+word_free 26.0
+word_mail -2.0
+word_credit 18.0
+char_lbracket -2.0
+word_conference -30.0
+word_85 -30.0
+word_remove 34.0

@@ -1,0 +1,4 @@
+Do they lead to trees that are substantially more or less accurate?
+For GINI,
+ 1. Dataset 1, there was no difference in accuracy or tree
+ 2. Dataset 2, there was no difference in accuracy or tree
