@@ -1,8 +1,8 @@
+/**
+ * Created by Nisansa on 15/02/06.
+ */
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 
 /**
  * Created by Nisansa on 15/02/01.
@@ -10,15 +10,15 @@ import java.util.Iterator;
  *
  */
 @SuppressWarnings("unchecked")
-public class perceptron {
+public class perceptron1 {
     String baseString="Base";
     HashMap<String,Double> weights;
 
     public static void main(String[] args) {
-        perceptron per;
+        perceptron1 per;
         if (args.length != 4) {
             System.err.println("Error in arguments");
-           // per = new perceptron("spambase-train.csv", "spambase-test.csv", 1 , "model.model");
+           //  per = new perceptron1("spambase-train.csv", "spambase-test.csv", 1 , "model.model");
         } else {
             if (!args[0].contains(".csv")) {
                 args[0] = args[0] + ".csv";
@@ -30,25 +30,32 @@ public class perceptron {
             if (!args[3].contains(".model")) {
                 args[3] = args[3] + ".model";
             }
-            per = new perceptron(args[0], args[1],eta, args[3]); //"spambase-train", "spambase-test", 0.01 , "model"
+            per = new perceptron1(args[0], args[1],eta, args[3]); //"spambase-train", "spambase-test", 0.01 , "model"
         }
     }
 
-    public perceptron(String trainingSet,String testSet,double eta,String modelFile) {
+    public perceptron1(String trainingSet,String testSet,double eta,String modelFile) {
 
         String[][] training_data = readFile(trainingSet);
         EntrySet training_set = new EntrySet(training_data);
         String[][] test_data = readFile(testSet);
         EntrySet test_set = new EntrySet(test_data);
-
+        HashMap<String,Double> tempWeights;
+        HashMap<String,Double> bestWeights;
 
         weights=new HashMap<String,Double>();
+        tempWeights=new HashMap<String,Double>();
+        bestWeights=new HashMap<String,Double>();
         weights.put(baseString,0.0);
+        tempWeights.put(baseString,0.0);
+        bestWeights.put(baseString,0.0);
         Iterator<String> kItr=training_set.getKeyItr();
         while(kItr.hasNext()){
             String key=kItr.next();
             if(!key.equalsIgnoreCase("Spam")) {
                 weights.put(key, 0.0);
+                tempWeights.put(key, 0.0);
+                bestWeights.put(key, 0.0);
             }
         }
 
@@ -57,68 +64,121 @@ public class perceptron {
         boolean loop=true;
         int epochCount=0;
         double training_accuracy = 100;
+        double old_training_accuracy = 0;
+        double absolute_best=0;
+        int limit=50;
         do {
             epochCount++;
 
             //Train
-            Iterator<HashMap<String, Boolean>> itr=training_set.getIterator();
-            while(itr.hasNext()){
-                HashMap<String, Boolean> example=itr.next();
+           // Iterator<HashMap<String, Boolean>> itr=training_set.getIterator();
+            HashMap<String, Boolean> example=null;
+           int toss= new Random().nextInt(100);
 
-                //Activate Perceptron
-                double[] result=activate(example); //{sum,ans}
-
-                //Calculate error
-                double error=result[1]-result[0];
-
-                //Update weights
-                kItr=example.keySet().iterator();
-                while(kItr.hasNext()) {
-                    String key = kItr.next();
-                    if (!key.equalsIgnoreCase("Spam")) {
-                        double x=0;
-                        if(example.get(key)){
-                            x=1;
-                        }
-                        else{
-                            x=-1;
-                        }
-                        double newWeight=weights.get(key)+eta*error*x;
-                        weights.remove(key);
-                        weights.put(key,newWeight);
-                    }
+            if(toss>50) {
+                training_set.resetRandom();
+                example = training_set.getRandomExample();
+                while (example != null) {
+                    UpdateTempWeights(eta, tempWeights, example);
+                    example = training_set.getRandomExample();
                 }
-
-                //Update base
-                double newBase=weights.get(baseString)+eta*error*1;
-                weights.remove(baseString);
-                weights.put(baseString,newBase);
+            }
+            else {
+                Iterator<HashMap<String, Boolean>> itr = training_set.getIterator();
+                while (itr.hasNext()) {
+                    example = itr.next();
+                    UpdateTempWeights(eta, tempWeights, example);
+                }
             }
 
 
             //Test on training set
-            itr =training_set.getIterator();// test_set.getIterator();
+            Iterator<HashMap<String, Boolean>> itr =training_set.getIterator();// test_set.getIterator();
             int count = 0;
             training_accuracy = 100;
+            HashMap<String, Boolean> observation=null;
             while (itr.hasNext()) {
-                HashMap<String, Boolean> observation = itr.next();
-                double[] result=activate(observation); //{sum,ans}
+                observation = itr.next();
+                double[] result=activate(observation,tempWeights); //{sum,ans}
                 if (result[0] == result[1]) {
                     count++;
                 }
             }
             training_accuracy = ( (((double) count * 100) / (double) training_set.Size()));
 
+
+
+            //If training accuracy has improved, assign. Otherwise ignore
+            boolean accept=(old_training_accuracy<training_accuracy);
+            if(!accept && ((0.8*old_training_accuracy)<training_accuracy)){
+                toss= new Random().nextInt(100);
+                if(toss>limit){
+                    accept=true;
+                    limit+=((100-limit)/10);
+                }
+            }
+
+            if(accept){
+               // System.out.println(old_training_accuracy +" !!! "+training_accuracy);
+                kItr=observation.keySet().iterator();
+                while(kItr.hasNext()) {
+                    String key = kItr.next();
+                    weights.remove(key);
+                    weights.put(key,tempWeights.get(key));
+                    if(absolute_best<training_accuracy) {
+                        bestWeights.remove(key);
+                        bestWeights.put(key,tempWeights.get(key));
+                        absolute_best=training_accuracy;
+                      //  System.out.println("absolute_best: "+absolute_best);
+                    }
+                }
+                old_training_accuracy=training_accuracy;
+            }
+            else{
+                epochCount--;
+            }
+
+
             if(training_accuracy>=100 || epochCount>=100){
                 loop=false;
             }
 
             //Print on screen
-           // System.out.println("Epoch : " + epochCount );
+            // System.out.println("Epoch : " + epochCount );
 
 
 
         } while (loop);
+
+
+ /*       //Use the best not the last.
+        if(absolute_best>training_accuracy){
+            System.out.println("Here: "+absolute_best);
+            System.out.println("Here: "+training_accuracy);
+            kItr=bestWeights.keySet().iterator();
+            while(kItr.hasNext()) {
+                String key = kItr.next();
+                weights.remove(key);
+                weights.put(key,bestWeights.get(key));
+            }
+
+            //Test on training set again
+            Iterator<HashMap<String, Boolean>> itr =training_set.getIterator();// test_set.getIterator();
+            int count = 0;
+            training_accuracy = 100;
+            HashMap<String, Boolean> observation=null;
+            while (itr.hasNext()) {
+                observation = itr.next();
+                double[] result=activate(observation,tempWeights); //{sum,ans}
+                if (result[0] == result[1]) {
+                    count++;
+                }
+            }
+            training_accuracy = ( (((double) count * 100) / (double) training_set.Size()));
+
+        }*/
+
+
 
         //Print file
         String line=weights.get(baseString)+"\n";
@@ -136,7 +196,7 @@ public class perceptron {
         String predictions="";
         while (itr.hasNext()) {
             HashMap<String, Boolean> observation = itr.next();
-            double[] result=activate(observation); //{sum,ans}
+            double[] result=activate(observation,weights); //{sum,ans}
             if (result[0] == result[1]) {
                 count++;
             }
@@ -155,8 +215,39 @@ public class perceptron {
         System.out.println("Test accuracy : " + test_accuracy + "%");
     }
 
+    private void UpdateTempWeights(double eta, HashMap<String, Double> tempWeights, HashMap<String, Boolean> example) {
+        Iterator<String> kItr;//Activate Perceptron
+        double[] result=activate(example,weights); //{sum,ans}
 
-    private double[] activate(HashMap<String, Boolean> example){
+        //Calculate error
+        double error=result[1]-result[0];
+
+        //Update weights
+        kItr=example.keySet().iterator();
+        while(kItr.hasNext()) {
+            String key = kItr.next();
+            if (!key.equalsIgnoreCase("Spam")) {
+                double x=0;
+                if(example.get(key)){
+                    x=1;
+                }
+                else{
+                    x=-1;
+                }
+                double newWeight=weights.get(key)+eta*error*x;
+                tempWeights.remove(key);
+                tempWeights.put(key,newWeight);
+            }
+        }
+
+        //Update base
+        double newBase=weights.get(baseString)+eta*error*1;
+        tempWeights.remove(baseString);
+        tempWeights.put(baseString,newBase);
+    }
+
+
+    private double[] activate(HashMap<String, Boolean> example,HashMap<String,Double> weights){
         Iterator<String> kItr=example.keySet().iterator();
         double[] result=new double[2]; //{sum,ans}
         result[0]=weights.get(baseString);
@@ -234,6 +325,7 @@ public class perceptron {
     public class EntrySet {
 
         ArrayList<HashMap<String,Boolean>> entries=new ArrayList<HashMap<String,Boolean>>();
+           boolean[] used=null;
 
         public EntrySet(EntrySet e) {
             this(e.entries);
@@ -260,6 +352,31 @@ public class perceptron {
                 entries.add(entryDeepCopy);
             }
         }
+
+
+        public void resetRandom(){
+            used=null;
+        }
+        public HashMap<String,Boolean> getRandomExample(){
+            if(used==null){
+                used=new boolean[entries.size()];
+            }
+
+            for (int i = 0; i <used.length ; i++) {
+                if(!used[i]){
+                    do {
+                        int index = new Random().nextInt(used.length);
+                        if(!used[index]){
+                            used[index]=true;
+                            return(entries.get(index));
+                        }
+                    }while(true);
+                }
+            }
+            return null;
+        }
+
+
 
         public Iterator<HashMap<String,Boolean>> getIterator(){
             return entries.iterator();
@@ -352,4 +469,5 @@ public class perceptron {
     }
 
 }
+
 
