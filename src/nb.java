@@ -31,6 +31,7 @@ public class nb {
         DataSet trainData=new DataSet(readFile(trainingSet),beta);
         DataSet testData=new DataSet(readFile(testSet),beta);
         testData.Test(trainData.getBase(),trainData.getWeights());
+        writeFile(modelFile,trainData.toString());
     }
 
 
@@ -101,29 +102,53 @@ public class nb {
             }
         }
 
+        public String toString(){
+            String line=getBase()+"\n";
+            HashMap<String, Double> weights=getWeights();
+            for (int i = 0; i < columns.size(); i++) {
+                String name=columns.get(i).name;
+                line+=name+" "+weights.get(name)+"\n";
+            }
+            return line;
+        }
+
+
         public void Test(double base,HashMap<String, Double> weights){
+            int count=0;
             for (int i = 0; i <cla.size(); i++) {
                 double val=base;
                 for (int j = 0; j < columns.size(); j++) {
                     DataColumn c= columns.get(j);
                     if(c.get(i)){
+                      //  System.out.println(c.name+" "+weights.get(c.name));
                         val+=weights.get(c.name);
                     }
                 }
-                System.out.println(cla.get(i) + " " + val);
+
+                val=1/(1+Math.exp(-val));
+
+                boolean res=false;
+                if(val>=0){
+                    res=true;
+                }
+                if(cla.get(i)== res){
+                    count++;
+                }
+
+                System.out.println(val);
             }
+           // System.out.println("\nTest set Accuracy "+(count*100)/cla.size());
         }
 
 
         public double getBase(){
-            System.out.println("True "+cla.count(true));
-            System.out.println("False "+cla.count(false));
             double base=logRatio(cla.count(true)+beta,cla.count(false)+beta);
             for (int i = 0; i < columns.size(); i++) {
                 DataColumn c=columns.get(i);
                 ArrayList<Integer> rows=c.getRows(false);
                 base+=logRatio(cla.count(true,rows)+beta,cla.count(false,rows)+beta);
             }
+            //System.out.println("Base "+base);
             return base;
         }
 
@@ -135,6 +160,7 @@ public class nb {
                 double weight=logRatio(cla.count(true, rows1) + beta, cla.count(false, rows1) + beta);
                 ArrayList<Integer> rows0=c.getRows(false);
                 weight-=logRatio(cla.count(true,rows0)+beta,cla.count(false,rows0)+beta);
+                //System.out.println(c.name+" "+weight);
                 weights.put(c.name, weight);
             }
             return weights;
